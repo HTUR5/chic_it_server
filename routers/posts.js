@@ -19,7 +19,6 @@ postRouter.use(bodyParser.json());
 
 //add new user to the database
 postRouter.post('/addUser', async (req, res) => {
-    console.log("you are here");
     const ans = await post_functions.addUser(req.body.username, req.body.fullName, req.body.email, req.body.phone, req.body.password)
     if (ans.length === 0 ) {
     return res.status(404).send()
