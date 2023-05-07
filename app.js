@@ -12,5 +12,5 @@ const server = app.listen(3000, () => {
 })
 
 server.on('connection', (socket) => {
-  console.log('A client connected to the server.')
+  //console.log('A client connected to the server.')
 })
