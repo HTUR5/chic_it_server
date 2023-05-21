@@ -84,6 +84,33 @@ export async function checkIfEmailExists(email) {
     console.error('Error checking if email exists:', error);
   }
 }
+export async function addPost(imageUrl, uid, items) {
+  console.log("addPost")
+  const hashMap = JSON.parse(items);
+  const userRef = fb.doc(db, 'usersById', uid)
+  const userDoc = await fb.getDoc(userRef)
+  if(userDoc.exists()){
+      const numPosts = userDoc.data().postCount + 1
+      await fb.updateDoc(userRef, {postCount: numPosts})
+  }
+  else{
+      console.log("error in make post")
+  }
+  try {
+    const docRef = await fb.addDoc(fb.collection(db, "posts"), 
+    {
+      imageurl: imageUrl,
+      items: hashMap, // Add the items dictionary to the post document
+      publisher: uid,
+      postid: ''
+    });
+    const docKey = docRef.id;
+    await fb.updateDoc(docRef, {postid: docKey})
+  } catch (error) {
+    console.error('Error post:', error);
+  }
+  return "done"
+}
 
 export async function makePost(imageUrl, description, store, price, type, uid) {
   const userRef = fb.doc(db, 'usersById', uid)
