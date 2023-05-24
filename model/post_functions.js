@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, query, where, setDoc } from 'firebase/firestore';
+import { getFirestore, collection, query, where, setDoc , doc, getDoc, deleteDoc } from 'firebase/firestore';
 import { FieldValue } from 'firebase/firestore';
 import "firebase/auth"
 import admin from 'firebase-admin';
@@ -84,33 +84,6 @@ export async function checkIfEmailExists(email) {
     console.error('Error checking if email exists:', error);
   }
 }
-export async function addPost(imageUrl, uid, items) {
-  console.log("addPost")
-  const hashMap = JSON.parse(items);
-  const userRef = fb.doc(db, 'usersById', uid)
-  const userDoc = await fb.getDoc(userRef)
-  if(userDoc.exists()){
-      const numPosts = userDoc.data().postCount + 1
-      await fb.updateDoc(userRef, {postCount: numPosts})
-  }
-  else{
-      console.log("error in make post")
-  }
-  try {
-    const docRef = await fb.addDoc(fb.collection(db, "posts"), 
-    {
-      imageurl: imageUrl,
-      items: hashMap, // Add the items dictionary to the post document
-      publisher: uid,
-      postid: ''
-    });
-    const docKey = docRef.id;
-    await fb.updateDoc(docRef, {postid: docKey})
-  } catch (error) {
-    console.error('Error post:', error);
-  }
-  return "done"
-}
 
 export async function makePost(imageUrl, description, store, price, type, uid) {
   const userRef = fb.doc(db, 'usersById', uid)
@@ -154,6 +127,96 @@ export async function savePost(uid, pid) {
     }
   } catch (error) {
     console.error("Error saving/removing post: ", error);
+  }
+  return "done"
+}
+
+export async function followUser(uid, pid) {
+  try {
+    const userRef = fb.doc(db, 'follows', uid);
+    const userSnapshot = await fb.getDoc(userRef);
+
+    if (userSnapshot.exists()) {
+      const userDocData = userSnapshot.data();
+      const followers = userDocData.followers || {};
+      const following = userDocData.following || {};
+
+      if (following.hasOwnProperty(pid)) {
+        // If the pid exists in following, remove it
+        delete following[pid];
+        console.log("Unfollowed successfully!");
+
+        // Remove the follower uid from the followed user's document
+        const followedUserRef = fb.doc(db, 'follows', pid);
+        await fb.updateDoc(followedUserRef, { [`followers.${uid}`]: fb.deleteField() });
+      } else {
+        // If the pid doesn't exist in following, add it
+        following[pid] = true;
+        console.log("Followed successfully!");
+
+        // Update the followers hashmap in the followed user's document
+        const followedUserRef = fb.doc(db, 'follows', pid);
+        const followedUserSnapshot = await fb.getDoc(followedUserRef);
+        if (followedUserSnapshot.exists()) {
+          const followedUserDocData = followedUserSnapshot.data();
+          const followedUserFollowers = followedUserDocData.followers || {};
+          followedUserFollowers[uid] = true; // Add the follower uid to the followers hashmap
+          await fb.setDoc(followedUserRef, { followers: followedUserFollowers });
+        } else {
+          await fb.setDoc(followedUserRef, { followers: { [uid]: true } });
+        }
+      }
+
+      // Update the user document with the modified followers and following hashmaps
+      await fb.updateDoc(userRef, { followers, following });
+    } else {
+      // If the user document doesn't exist, create it with the initial follower and following
+      await fb.setDoc(userRef, { followers: {}, following: { [pid]: true } });
+      console.log("Followed successfully!");
+
+      // Update the followers hashmap in the followed user's document
+      const followedUserRef = fb.doc(db, 'follows', pid);
+      const followedUserSnapshot = await fb.getDoc(followedUserRef);
+      if (followedUserSnapshot.exists()) {
+        const followedUserDocData = followedUserSnapshot.data();
+        const followedUserFollowers = followedUserDocData.followers || {};
+        followedUserFollowers[uid] = true; // Add the follower uid to the followers hashmap
+        await fb.setDoc(followedUserRef, { followers: followedUserFollowers });
+      } else {
+        await fb.setDoc(followedUserRef, { followers: { [uid]: true } });
+      }
+    }
+  } catch (error) {
+    console.error("Error following/unfollowing user: ", error);
+  }
+
+  return "done";
+}
+
+
+export async function addPost(imageUrl, uid, items) {
+  const hashMap = JSON.parse(items);
+  const userRef = fb.doc(db, 'usersById', uid)
+  const userDoc = await fb.getDoc(userRef)
+  if(userDoc.exists()){
+      const numPosts = userDoc.data().postCount + 1
+      await fb.updateDoc(userRef, {postCount: numPosts})
+  }
+  else{
+      console.log("error in make post")
+  }
+  try {
+    const docRef = await fb.addDoc(fb.collection(db, "posts"), 
+    {
+      imageurl: imageUrl,
+      items: hashMap, // Add the items dictionary to the post document
+      publisher: uid,
+      postid: ''
+    });
+    const docKey = docRef.id;
+    await fb.updateDoc(docRef, {postid: docKey})
+  } catch (error) {
+    console.error('Error post:', error);
   }
   return "done"
 }

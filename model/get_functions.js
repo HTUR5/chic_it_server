@@ -60,6 +60,29 @@ export async function countPost(uid) {
   return null
 }
 
+export async function getFollowersAndFollowingCount(uid) {
+  const userRef = fb.doc(db, 'follows', uid);
+  try {
+    const userSnapshot = await fb.getDoc(userRef);
+    if (userSnapshot.exists()) {
+      const userDocData = userSnapshot.data();
+      const followersCount = Object.keys(userDocData.followers || {}).length;
+      const followingCount = Object.keys(userDocData.following || {}).length;
+      console.log(followersCount);
+      console.log(followingCount);
+      
+      return `Followers: ${followersCount}, Following: ${followingCount}`;
+    } else {
+      return "Followers: 0, Following: 0";
+    }
+  } catch (error) {
+    console.error("Error retrieving followers and following count: ", error);
+    return "Followers: 0, Following: 0";
+  }
+}
+
+
+
 export async function check(uid, pid) {
   try {
     const userRef = fb.doc(db, 'saves', uid)
@@ -73,6 +96,30 @@ export async function check(uid, pid) {
     console.error("Error check: ", error);
   }
 }
+
+
+export async function checkFollows(uid, pid) {
+  try {
+    const userRef = fb.doc(db, 'follows', uid);
+    const userSnapshot = await fb.getDoc(userRef);
+    
+    if (userSnapshot.exists()) {
+      const userDocData = userSnapshot.data();
+      const following = userDocData.following || {};
+      
+      if (following.hasOwnProperty(pid)) {
+        return "following";
+      } else {
+        return "follow";
+      }
+    } else {
+      return "follow";
+    }
+  } catch (error) {
+    console.error("Error checking follows: ", error);
+  }
+}
+
 
 // Get a list of users to the block page 
 export async function getMyPhoto(uid) {
@@ -117,3 +164,53 @@ export async function homePosts() {
   });
   return userList;
 }
+
+export async function homeUsers() {
+  const userSnapshot = await fb.getDocs(fb.collection(db, 'usersById'));
+  const userListFromDB = userSnapshot.docs || [];
+  //const filteredUsers = userListFromDB.filter(doc => doc.data().publisher === uid);
+  const userList = userListFromDB.map(doc => {
+    const {phone,uid,email,username,imageurl,fullname} = doc.data();
+    return {phone,uid,email,username,imageurl,fullname};
+  });
+  return userList;
+}
+
+export async function getFollowings(uid) {
+  const userRef = fb.doc(db, 'follows', uid);
+
+  try {
+    const userSnapshot = await fb.getDoc(userRef);
+    if (userSnapshot.exists()) {
+      const userDocData = userSnapshot.data();
+      const followingList = Object.keys(userDocData.following || {});
+
+      return followingList;
+    } else {
+      return [];
+    }
+  } catch (error) {
+    console.error("Error retrieving followings: ", error);
+    return [];
+  }
+}
+
+export async function getFollowers(uid) {
+  const userRef = fb.doc(db, 'follows', uid);
+
+  try {
+    const userSnapshot = await fb.getDoc(userRef);
+    if (userSnapshot.exists()) {
+      const userDocData = userSnapshot.data();
+      const followersList = Object.keys(userDocData.followers || {});
+
+      return followersList;
+    } else {
+      return [];
+    }
+  } catch (error) {
+    console.error("Error retrieving followers: ", error);
+    return [];
+  }
+}
+
