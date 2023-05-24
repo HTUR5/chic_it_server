@@ -51,6 +51,22 @@ postRouter.post('/makePost', async (req, res) => {
   return res.status(200).send("done")
 })
 
+postRouter.post('/savePost', async (req, res) => {
+  const ans = await post_functions.savePost(req.body.uid, req.body.pid)
+  if (ans.length === 0 ) {
+  return res.status(404).send()
+  }
+  return res.status(200).send("done")
+})
+
+postRouter.post('/followUser', async (req, res) => {
+  const ans = await post_functions.followUser(req.body.uid,req.body.pid)
+  if (ans.length === 0 ) {
+  return res.status(404).send()
+  }
+  return res.status(200).send("done")
+})
+
 //upload post
 postRouter.post('/addPost', async (req, res) => {
   console.log(req.body.items)
@@ -61,12 +77,5 @@ postRouter.post('/addPost', async (req, res) => {
   return res.status(200).send("done")
 })
 
-postRouter.post('/savePost', async (req, res) => {
-  const ans = await post_functions.savePost(req.body.uid, req.body.pid)
-  if (ans.length === 0 ) {
-  return res.status(404).send()
-  }
-  return res.status(200).send("done")
-})
-
 export { postRouter }
+
