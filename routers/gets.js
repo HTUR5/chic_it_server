@@ -70,7 +70,7 @@ getRouter.get('/getMyPhoto', async(req, res) =>{
 
 getRouter.get('/mySavedPosts', async(req, res) =>{
     const postsList = await get_functions.mySavedPosts(req.query.uid)
-    //console.log(postsList)
+    // console.log(postsList)
     if (postsList.length === 0){
       return res.status(404).send()
     }
@@ -113,6 +113,15 @@ getRouter.get('/getFollowers', async(req, res) =>{
     return res.status(404).send()
   }
   res.status(200).send(countFollow.toString());
+})
+
+getRouter.get('/getPostItems', async(req, res) =>{
+  const post = await get_functions.getPostItems(req.query.pid)
+  // console.log(post)
+  if (post.length === 0){
+    return res.status(404).send()
+  }
+  return res.status(200).send(post)
 })
 
 export { getRouter }
