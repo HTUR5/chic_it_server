@@ -114,6 +114,30 @@ export async function makePost(imageUrl, description, store, price, type, uid) {
   return "done"
 }
 
+
+
+// export async function savePost(uid, pid) {
+//   try {
+//     const userRef = fb.doc(db, 'saves', uid);
+//     const userSnapshot = await fb.getDoc(userRef);
+//     const userData = userSnapshot.exists() ? userSnapshot.data() : {};
+    
+//     if (userData.hasOwnProperty(pid)) {
+//       delete userData[pid];
+//       await fb.setDoc(userRef, userData);
+//       console.log("Post removed successfully!");
+//     } else {
+//       userData[pid] = true;
+//       await fb.setDoc(userRef, userData);
+//       console.log("Post saved successfully!");
+//     }
+//   } catch (error) {
+//     console.error("Error saving/removing post: ", error);
+//   }
+  
+//   return "done";
+// }
+
 export async function savePost(uid, pid) {
   try {
     const userRef = fb.doc(db, 'saves', uid)
@@ -130,6 +154,8 @@ export async function savePost(uid, pid) {
   }
   return "done"
 }
+
+
 
 export async function followUser(uid, pid) {
   try {
@@ -194,29 +220,70 @@ export async function followUser(uid, pid) {
 }
 
 
-export async function addPost(imageUrl, uid, items) {
+// export async function addPost(imageUrl, uid, items,type) {
+//   const hashMap = JSON.parse(items);
+//   const userRef = fb.doc(db, 'usersById', uid)
+//   const userDoc = await fb.getDoc(userRef)
+//   if(userDoc.exists()){
+//       const numPosts = userDoc.data().postCount + 1
+//       await fb.updateDoc(userRef, {postCount: numPosts})
+//   }
+//   else{
+//       console.log("error in make post")
+//   }
+//   try {
+//     const docRef = await fb.addDoc(fb.collection(db, "posts"), 
+//     {
+//       imageurl: imageUrl,
+//       items: hashMap, // Add the items dictionary to the post document
+//       publisher: uid,
+//       postid: '',
+//       type: type
+//     });
+//     const docKey = docRef.id;
+//     await fb.updateDoc(docRef, {postid: docKey})
+//   } catch (error) {
+//     console.error('Error post:', error);
+//   }
+//   return "done"
+// }
+
+export async function addPost(imageUrl, uid, items, type) {
   const hashMap = JSON.parse(items);
-  const userRef = fb.doc(db, 'usersById', uid)
-  const userDoc = await fb.getDoc(userRef)
-  if(userDoc.exists()){
-      const numPosts = userDoc.data().postCount + 1
-      await fb.updateDoc(userRef, {postCount: numPosts})
+  const userRef = fb.doc(db, 'usersById', uid);
+  const userDoc = await fb.getDoc(userRef);
+  if (userDoc.exists()) {
+    const numPosts = userDoc.data().postCount + 1;
+    await fb.updateDoc(userRef, { postCount: numPosts });
+  } else {
+    console.log("Error in creating post");
   }
-  else{
-      console.log("error in make post")
-  }
+  
   try {
-    const docRef = await fb.addDoc(fb.collection(db, "posts"), 
-    {
+    const postRef = fb.collection(db, "posts");
+    const postSnapshot = await fb.getDocs(postRef);
+    const numItems = Object.keys(hashMap).length;
+    
+    const newPostData = {
       imageurl: imageUrl,
-      items: hashMap, // Add the items dictionary to the post document
+      items: {}, // Initialize an empty object for the modified items
       publisher: uid,
-      postid: ''
+      postid: "",
+      type: type
+    };
+    
+    // Assign sequential IDs to items
+    Object.entries(hashMap).forEach(([key, value], index) => {
+      newPostData.items[index + 1] = value;
     });
-    const docKey = docRef.id;
-    await fb.updateDoc(docRef, {postid: docKey})
+
+    const newPostRef = await fb.addDoc(postRef, newPostData);
+    const newPostId = newPostRef.id;
+    await fb.updateDoc(newPostRef, { postid: newPostId });
+
+    return "done";
   } catch (error) {
-    console.error('Error post:', error);
+    console.error("Error creating post:", error);
+    throw error;
   }
-  return "done"
 }

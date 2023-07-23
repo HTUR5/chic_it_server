@@ -21,9 +21,9 @@ export async function getUser(uid) {
     const userRef = fb.doc(db, 'usersById', uid)
     const userDoc = await fb.getDoc(userRef)
     if(userDoc.exists()){
-      const { fullname, email, username, imageurl, uid, gender, size } = userDoc.data()
+      const { fullname, email, username, imageurl, uid, gender, size, phone} = userDoc.data()
       //console.log(userDoc.data())
-      return { fullname, email, username, imageurl, uid, gender, size }
+      return { fullname, email, username, imageurl, uid, gender, size ,phone}
     }
     else{
       console.log("error")
@@ -36,9 +36,9 @@ export async function getPostDetails(pid) {
   const postRef = fb.doc(db, 'posts', pid)
   const postDoc = await fb.getDoc(postRef)
   if(postDoc.exists()){
-    const {description, imageurl, postid, price, publisher, store, type} = postDoc.data()
-    //console.log(userDoc.data())
-    return {description, imageurl, postid, price, publisher, store, type}
+    const { imageurl, postid, publisher, type,items} = postDoc.data()
+    // console.log(userDoc.data())
+    return { imageurl, postid, publisher, type, items}
   }
   else{
     console.log("error")
@@ -82,6 +82,22 @@ export async function getFollowersAndFollowingCount(uid) {
 }
 
 
+// export async function check(uid, pid) {
+//   try {
+//     const userRef = fb.doc(db, 'saves', uid);
+//     const userSnapshot = await fb.getDoc(userRef);
+//     const userData = userSnapshot.exists() ? userSnapshot.data() : {};
+    
+//     if (userData.hasOwnProperty(pid)) {
+//       return "saved";
+//     } else {
+//       return "not saved";
+//     }
+//   } catch (error) {
+//     console.error("Error checking post: ", error);
+//     throw error;
+//   }
+// }
 
 export async function check(uid, pid) {
   try {
@@ -96,6 +112,7 @@ export async function check(uid, pid) {
     console.error("Error check: ", error);
   }
 }
+
 
 
 export async function checkFollows(uid, pid) {
@@ -146,7 +163,6 @@ export async function mySavedPosts(uid) {
   const posts = await Promise.all(
     postIds.map(async (postId) => {
       const postRef = fb.doc(db, 'posts', postId)
-      console.log("reg")
       const postSnapshot = await fb.getDoc(postRef)
       return postSnapshot.data();
     })
@@ -211,6 +227,33 @@ export async function getFollowers(uid) {
   } catch (error) {
     console.error("Error retrieving followers: ", error);
     return [];
+  }
+}
+
+
+export async function getPostItems(pid) {
+  try {
+    // Get Firestore reference
+    // const db = admin.firestore();
+  
+    // Retrieve the post document
+    const postRef = fb.doc(db, 'posts', pid)
+    const postSnapshot = await fb.getDoc(postRef)
+  
+    // Check if the post document exists
+    if (!postSnapshot.exists) {
+      throw new Error('Post not found');
+    }
+  
+    // Retrieve and return the items
+    const postData = postSnapshot.data();
+    const items = postData.items;
+    console.log('Items:', items);
+    return items;
+  } catch (error) {
+    // Handle any errors
+    console.error('Error retrieving post items:', error);
+    throw error;
   }
 }
 
