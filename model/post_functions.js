@@ -29,7 +29,11 @@ export async function deletePost(pid, publisher, uid) {
   const postRef = fb.doc(db, 'posts', pid)
   const postSnapshot = await fb.getDoc(postRef);
   if (postSnapshot.exists() && postSnapshot.data().publisher === uid) {
-    await fb.deleteDoc(postRef);    
+    await fb.deleteDoc(postRef);
+    const userRef = fb.doc(db, 'usersById', uid)
+    const userDoc = await fb.getDoc(userRef)
+    const numPosts = userDoc.data().postCount - 1
+    await fb.updateDoc(userRef, {postCount: numPosts})    
     console.log('Post deleted successfully.');
   } else {
     console.log('Post not deleted. Publisher does not match current user.');
@@ -143,11 +147,18 @@ export async function savePost(uid, pid) {
     const userRef = fb.doc(db, 'saves', uid)
     const userSnapshot = await fb.getDoc(userRef);
     if (userSnapshot.exists() && userSnapshot.data().hasOwnProperty([pid])) {
-      await fb.deleteDoc(userRef);
+      const userData = userSnapshot.exists() ? userSnapshot.data() : {};
+      delete userData[pid];
+      await fb.setDoc(userRef, userData);
       console.log("Post removed successfully!");
-    } else {
+    } else if (userSnapshot.exists()) {
+      const docRef = fb.doc(db, "saves", uid);
+      const updateData = {[pid]: true};
+      await fb.updateDoc(docRef, updateData);
+    } else { 
       await fb.setDoc(fb.doc(db, "saves", uid), {[pid]: true});  
       console.log("Post saved successfully!");
+      console.log(pid);
     }
   } catch (error) {
     console.error("Error saving/removing post: ", error);

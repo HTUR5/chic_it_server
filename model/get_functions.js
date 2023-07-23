@@ -68,16 +68,16 @@ export async function getFollowersAndFollowingCount(uid) {
       const userDocData = userSnapshot.data();
       const followersCount = Object.keys(userDocData.followers || {}).length;
       const followingCount = Object.keys(userDocData.following || {}).length;
-      console.log(followersCount);
-      console.log(followingCount);
+      // console.log(followersCount);
+      // console.log(followingCount);
       
-      return `Followers: ${followersCount}, Following: ${followingCount}`;
+      return (`${followersCount},${followingCount}`).toString();
     } else {
-      return "Followers: 0, Following: 0";
+      return "0,0";
     }
   } catch (error) {
     console.error("Error retrieving followers and following count: ", error);
-    return "Followers: 0, Following: 0";
+    return "0,0";
   }
 }
 
@@ -194,13 +194,15 @@ export async function homeUsers() {
 
 export async function getFollowings(uid) {
   const userRef = fb.doc(db, 'follows', uid);
-
   try {
     const userSnapshot = await fb.getDoc(userRef);
     if (userSnapshot.exists()) {
       const userDocData = userSnapshot.data();
       const followingList = Object.keys(userDocData.following || {});
-
+      if(followingList.length === 0) {
+        return [uid];
+      }
+      console.log(followingList);
       return followingList;
     } else {
       return [];
