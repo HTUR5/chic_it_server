@@ -4,7 +4,6 @@ import 'firebase/auth';
 import 'firebase/firestore'
 import { where } from 'firebase/firestore';
 
-
 const firebaseConfig = {
     apiKey: "AIzaSyBrcpckvsh7oBhIn0q1rt2sPlDY7kKwtEM",
     authDomain: "chicit-a5e00.firebaseapp.com",
@@ -17,12 +16,10 @@ const db = fb.getFirestore(fireBaseRef);
 
 // Get user details
 export async function getUser(uid) {
-    //console.log(uid)
     const userRef = fb.doc(db, 'usersById', uid)
     const userDoc = await fb.getDoc(userRef)
     if(userDoc.exists()){
       const { fullname, email, username, imageurl, uid, gender, size, phone} = userDoc.data()
-      //console.log(userDoc.data())
       return { fullname, email, username, imageurl, uid, gender, size ,phone}
     }
     else{
@@ -32,12 +29,10 @@ export async function getUser(uid) {
 }
 
 export async function getPostDetails(pid) {
-  //console.log(uid)
   const postRef = fb.doc(db, 'posts', pid)
   const postDoc = await fb.getDoc(postRef)
   if(postDoc.exists()){
     const { imageurl, postid, publisher, type,items} = postDoc.data()
-    // console.log(userDoc.data())
     return { imageurl, postid, publisher, type, items}
   }
   else{
@@ -51,7 +46,6 @@ export async function countPost(uid) {
   const userRef = fb.doc(db, 'usersById', uid)
   const userDoc = await fb.getDoc(userRef)
   if(userDoc.exists()){
-      //console.log(userDoc.data().postCount)
       return userDoc.data().postCount
   }
   else{
@@ -68,9 +62,6 @@ export async function getFollowersAndFollowingCount(uid) {
       const userDocData = userSnapshot.data();
       const followersCount = Object.keys(userDocData.followers || {}).length;
       const followingCount = Object.keys(userDocData.following || {}).length;
-      // console.log(followersCount);
-      // console.log(followingCount);
-      
       return (`${followersCount},${followingCount}`).toString();
     } else {
       return "0,0";
@@ -80,24 +71,6 @@ export async function getFollowersAndFollowingCount(uid) {
     return "0,0";
   }
 }
-
-
-// export async function check(uid, pid) {
-//   try {
-//     const userRef = fb.doc(db, 'saves', uid);
-//     const userSnapshot = await fb.getDoc(userRef);
-//     const userData = userSnapshot.exists() ? userSnapshot.data() : {};
-    
-//     if (userData.hasOwnProperty(pid)) {
-//       return "saved";
-//     } else {
-//       return "not saved";
-//     }
-//   } catch (error) {
-//     console.error("Error checking post: ", error);
-//     throw error;
-//   }
-// }
 
 export async function check(uid, pid) {
   try {
@@ -119,11 +92,9 @@ export async function checkFollows(uid, pid) {
   try {
     const userRef = fb.doc(db, 'follows', uid);
     const userSnapshot = await fb.getDoc(userRef);
-    
     if (userSnapshot.exists()) {
       const userDocData = userSnapshot.data();
-      const following = userDocData.following || {};
-      
+      const following = userDocData.following || {};      
       if (following.hasOwnProperty(pid)) {
         return "following";
       } else {
@@ -137,8 +108,6 @@ export async function checkFollows(uid, pid) {
   }
 }
 
-
-// Get a list of users to the block page 
 export async function getMyPhoto(uid) {
     const userSnapshot = await fb.getDocs(fb.collection(db, 'posts'));
     const userListFromDB = userSnapshot.docs || [];
@@ -173,7 +142,6 @@ export async function mySavedPosts(uid) {
 export async function homePosts() {
   const userSnapshot = await fb.getDocs(fb.collection(db, 'posts'));
   const userListFromDB = userSnapshot.docs || [];
-  //const filteredUsers = userListFromDB.filter(doc => doc.data().publisher === uid);
   const userList = userListFromDB.map(doc => {
     const {description, imageurl,  postid,  publisher, store, price, type} = doc.data();
     return {description, imageurl,  postid,  publisher, store, price, type};
@@ -184,7 +152,6 @@ export async function homePosts() {
 export async function homeUsers() {
   const userSnapshot = await fb.getDocs(fb.collection(db, 'usersById'));
   const userListFromDB = userSnapshot.docs || [];
-  //const filteredUsers = userListFromDB.filter(doc => doc.data().publisher === uid);
   const userList = userListFromDB.map(doc => {
     const {phone,uid,email,username,imageurl,fullname} = doc.data();
     return {phone,uid,email,username,imageurl,fullname};
@@ -215,13 +182,11 @@ export async function getFollowings(uid) {
 
 export async function getFollowers(uid) {
   const userRef = fb.doc(db, 'follows', uid);
-
   try {
     const userSnapshot = await fb.getDoc(userRef);
     if (userSnapshot.exists()) {
       const userDocData = userSnapshot.data();
       const followersList = Object.keys(userDocData.followers || {});
-
       return followersList;
     } else {
       return [];
@@ -232,21 +197,13 @@ export async function getFollowers(uid) {
   }
 }
 
-
 export async function getPostItems(pid) {
   try {
-    // Get Firestore reference
-    // const db = admin.firestore();
-  
-    // Retrieve the post document
     const postRef = fb.doc(db, 'posts', pid)
     const postSnapshot = await fb.getDoc(postRef)
-  
-    // Check if the post document exists
-    if (!postSnapshot.exists) {
+      if (!postSnapshot.exists) {
       throw new Error('Post not found');
     }
-  
     // Retrieve and return the items
     const postData = postSnapshot.data();
     const items = postData.items;
